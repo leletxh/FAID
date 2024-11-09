@@ -1,0 +1,3 @@
+gradio
+wget
+requests
