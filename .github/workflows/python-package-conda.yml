@@ -25,6 +25,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install nuitka
+    - name: Verify Nuitka installation
+      run: |
+        where nuitka
+        nuitka --version
     - name: Build EXE with Nuitka
       run: |
         nuitka --standalone --onefile --enable-plugin=tk-inter --output-filename=app.exe app.py
