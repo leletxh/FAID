@@ -15,6 +15,10 @@ jobs:
 
     runs-on: windows-latest  # 使用 Windows 运行环境
 
+    env:
+      Nuitka_OPTIONS: "--standalone --onefile --enable-plugin=tk-inter --output-filename=app.exe app.py"
+      Nuitka_DOWNLOAD_DEPENDENCY_WALKER: "yes"  # 自动确认下载 Dependency Walker
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -32,7 +36,7 @@ jobs:
         nuitka --version
     - name: Build EXE with Nuitka
       run: |
-        nuitka --standalone --onefile --enable-plugin=tk-inter --output-filename=app.exe app.py
+        nuitka ${{ env.Nuitka_OPTIONS }}
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -41,6 +45,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       with:
