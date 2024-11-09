@@ -70,11 +70,11 @@ class ollama():
         self.debug.info(post)
         data = requests.post(url=url,json=post,stream=True)
         for i in data.iter_lines():
+            j = json.loads(i)
             self.debug.info(i)
             if "error" in j:
                 yield j["error"]
                 break
-            j = json.loads(i)
             if not(j["done"]):
                 yield j["message"]["content"]
     def generate(self,model_name:str,prompt:str):
