@@ -1,4 +1,5 @@
 import sys
+import time
 import Debug
 debug = Debug.Debug("main.log")
 print(
@@ -30,6 +31,11 @@ if not chat.have_ollama():
     debug.error("我们未检测到ollama服务，请检查是否正常启动或安装")
     print("请在打开的网站手动下载\n如果下载速度过慢请安装steam++，开启github网络加速后在https://github.com/ollama/ollama/releases 下载Latest版本")
     os.system("start https://ollama.com/download")
+    print("程序正在等待ollama启动，如果正常启动将会自动进行下一步")
+    while True:
+        if chat.have_ollama():
+            break
+        time.sleep(1)
 debug.info("环境检查完毕")
 THEMES = ["Base", "Default", "Origin", "Citrus", "Monochrome", "Soft", "Glass", "Ocean"]
 debug.info("正在加载主题...")
