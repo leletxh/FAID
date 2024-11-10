@@ -15,6 +15,10 @@ jobs:
 
     runs-on: windows-latest  # 使用 Windows 运行环境
 
+    env:
+      Nuitka_OPTIONS: "--standalone --onefile --enable-plugin=tk-inter --output-filename=app.exe app.py"
+      Nuitka_DOWNLOAD_DEPENDENCY_WALKER: "yes"  # 自动确认下载 Dependency Walker
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -25,16 +29,38 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
-    - name: Build EXE with PyInstaller
+        pip install nuitka
+    - name: Verify Nuitka installation
       run: |
-        pyinstaller --name=app --windowed -D app.py
+        where nuitka
+        nuitka --version
+    - name: Build EXE with Nuitka
+      run: |
+        nuitka ${{ env.Nuitka_OPTIONS }}
+    - name: Zip the output
+      run: |
+        Compress-Archive -Path .\app.exe -DestinationPath .\app.zip
+    - name: Get latest release version
+      id: get_latest_release
+      run: |
+        $latest_tag = git describe --tags --abbrev=0 2> $null
+        if ($latest_tag -eq $null) {
+          $new_tag = "v1.0.1"
+        } else {
+          $version_parts = $latest_tag -split '\.'
+          $major = $version_parts[0]
+          $minor = $version_parts[1]
+          $patch = [int]$version_parts[2] + 1
+          $new_tag = "$major.$minor.$patch"
+        }
+        echo "New tag: $new_tag"
+        echo "::set-output name=new_tag::$new_tag"
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.get_latest_release.outputs.new_tag }}
+        release_name: Release ${{ steps.get_latest_release.outputs.new_tag }}
         draft: false
         prerelease: false
         token: ${{ secrets.ACTION_TOKEN }}
@@ -42,6 +68,6 @@ jobs:
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/app/app.exe
-        asset_name: app.exe
-        asset_content_type: application/octet-stream
+        asset_path: ./app.zip
+        asset_name: app.zip
+        asset_content_type: application/zip
