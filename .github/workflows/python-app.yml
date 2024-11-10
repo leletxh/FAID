@@ -16,8 +16,7 @@ jobs:
     runs-on: windows-latest  # 使用 Windows 运行环境
 
     env:
-      Nuitka_OPTIONS: "--standalone --onefile --enable-plugin=tk-inter --output-filename=app.exe app.py"
-      Nuitka_DOWNLOAD_DEPENDENCY_WALKER: "yes"  # 自动确认下载 Dependency Walker
+      Nuitka_OPTIONS: "--lto=no --onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=3"
 
     steps:
     - uses: actions/checkout@v4
@@ -37,6 +36,11 @@ jobs:
     - name: Build EXE with Nuitka
       run: |
         nuitka ${{ env.Nuitka_OPTIONS }}
+    - name: Check if app.exe exists
+      run: |
+        if (-Not (Test-Path -Path ".\app.exe")) {
+          throw "app.exe was not generated successfully."
+        }
     - name: Zip the output
       run: |
         Compress-Archive -Path .\app.exe -DestinationPath .\app.zip
@@ -71,3 +75,10 @@ jobs:
         asset_path: ./app.zip
         asset_name: app.zip
         asset_content_type: application/zip
+    - name: Post job cleanup
+      run: |
+        git config --global --unset-all safe.directory
+        git config --local --unset-all core.sshCommand
+        git config --local --unset-all http.https://github.com/.extraheader
+        git submodule foreach --recursive "git config --local --unset-all core.sshCommand"
+        git submodule foreach --recursive "git config --local --unset-all http.https://github.com/.extraheader"
