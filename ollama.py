@@ -9,10 +9,13 @@ class ollama():
         self.url = f"http://{self.ip}:{self.port}"
     def have_ollama(self):
         url = f"{self.url}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            return True
-        else:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return True
+            else:
+                return False
+        except:
             return False
     def get_model_list(self) -> list:
         url = f"{self.url}/api/tags"
