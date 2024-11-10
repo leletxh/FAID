@@ -27,7 +27,7 @@ model = None
 debug.info("变量初始化完毕")
 debug.info("检查环境...")
 if not chat.have_ollama():
-    debug.error("未检测到ollama服务")
+    debug.error("我们未检测到ollama服务，请检查是否正常启动或安装")
     print("请在打开的网站手动下载\n如果下载速度过慢请安装steam++，开启github网络加速后在https://github.com/ollama/ollama/releases 下载Latest版本")
     os.system("start https://ollama.com/download")
 debug.info("环境检查完毕")
