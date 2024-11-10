@@ -16,29 +16,28 @@ jobs:
     runs-on: windows-latest  # Use the latest Windows runtime environment
 
     env:
+      Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=8"
       APP_BRANCH: "app"  # Branch to store the compiled app
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: Set up Python 3.10
+    - name: Set up Python 3.11
       uses: actions/setup-python@v3
       with:
-        python-version: "3.10"
+        python-version: "3.11"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install nuitka
+    - name: Verify Nuitka installation
+      run: |
+        where nuitka
+        nuitka --version
     - name: Build EXE with Nuitka
-      uses: Nuitka/Nuitka-Action@v1.1
-      with:
-        script-name: app.py
-        standalone: true
-        onefile: true
-        include-package: gradio,json,requests,PIL.ImageQt
-        assume-yes-for-downloads: true
-        show-scons: true
-        output-file: app.exe
+      run: |
+        nuitka ${{ env.Nuitka_OPTIONS }}
     - name: Check if app.exe exists
       run: |
         if (-Not (Test-Path -Path ".\app.exe")) {
