@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest  # Use the latest Windows runtime environment
 
     env:
-      Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=64"
+      Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=3"
       APP_BRANCH: "app"  # Branch to store the compiled app
 
     steps:
