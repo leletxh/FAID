@@ -43,28 +43,24 @@ jobs:
         if (-Not (Test-Path -Path ".\app.exe")) {
           throw "app.exe was not generated successfully."
         }
-    - name: Zip the output
-      run: |
-        Compress-Archive -Path .\app.exe -DestinationPath .\app.zip
     - name: Generate filename with timestamp
       id: generate_filename
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $filename = "$timestamp_FAID.zip"
+        $filename = "$timestamp_FAID.exe"
         echo "::set-output name=filename::$filename"
-    - name: Move zip file to artifacts directory
+    - name: Rename app.exe
       run: |
         $filename = ${{ steps.generate_filename.outputs.filename }}
-        New-Item -ItemType Directory -Force -Path "./artifacts"
-        Move-Item -Path .\app.zip -Destination "./artifacts/$filename"
+        Rename-Item -Path .\app.exe -NewName $filename
     - name: Checkout app branch
       run: |
         git checkout -b ${{ env.APP_BRANCH }} || git checkout ${{ env.APP_BRANCH }}
         git pull origin ${{ env.APP_BRANCH }}
-    - name: Add and commit zip file
+    - name: Add and commit renamed file
       run: |
         $filename = ${{ steps.generate_filename.outputs.filename }}
-        git add "./artifacts/$filename"
+        git add "$filename"
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git commit -m "Add compiled app: $filename" || echo "No changes to commit"
