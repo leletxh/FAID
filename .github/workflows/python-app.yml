@@ -5,22 +5,22 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:  # Allow manual triggering
 
 permissions:
-  contents: write  # 需要写权限来创建 Release
+  contents: write  # Required write permission to create and update branches
 
 jobs:
-  build:
+  build_and_deploy:
 
-    runs-on: windows-latest  # 使用 Windows 运行环境
+    runs-on: windows-latest  # Use the latest Windows runtime environment
 
     env:
-      Nuitka_OPTIONS: "--lto=no --onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=3"
-      RELEASE_TAG: "v1.0.1"  # 手动填写的版本号
+      APP_BRANCH: "app"  # Branch to store the compiled app
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
@@ -29,14 +29,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install nuitka
-    - name: Verify Nuitka installation
-      run: |
-        where nuitka
-        nuitka --version
     - name: Build EXE with Nuitka
-      run: |
-        nuitka ${{ env.Nuitka_OPTIONS }}
+      uses: Nuitka/Nuitka-Action@v1.1
+      with:
+        script-name: app.py
+        standalone: true
+        onefile: true
+        include-package: gradio,json,requests,PIL.ImageQt
+        assume-yes-for-downloads: true
+        show-scons: true
+        output-file: app.exe
     - name: Check if app.exe exists
       run: |
         if (-Not (Test-Path -Path ".\app.exe")) {
@@ -45,22 +47,31 @@ jobs:
     - name: Zip the output
       run: |
         Compress-Archive -Path .\app.exe -DestinationPath .\app.zip
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ env.RELEASE_TAG }}
-        release_name: Release ${{ env.RELEASE_TAG }}
-        draft: false
-        prerelease: false
-        token: ${{ secrets.ACTION_TOKEN }}
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./app.zip
-        asset_name: app.zip
-        asset_content_type: application/zip
+    - name: Generate filename with timestamp
+      id: generate_filename
+      run: |
+        $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+        $filename = "$timestamp_FAID.zip"
+        echo "::set-output name=filename::$filename"
+    - name: Move zip file to artifacts directory
+      run: |
+        $filename = ${{ steps.generate_filename.outputs.filename }}
+        New-Item -ItemType Directory -Force -Path "./artifacts"
+        Move-Item -Path .\app.zip -Destination "./artifacts/$filename"
+    - name: Checkout app branch
+      run: |
+        git checkout -b ${{ env.APP_BRANCH }} || git checkout ${{ env.APP_BRANCH }}
+        git pull origin ${{ env.APP_BRANCH }}
+    - name: Add and commit zip file
+      run: |
+        $filename = ${{ steps.generate_filename.outputs.filename }}
+        git add "./artifacts/$filename"
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git commit -m "Add compiled app: $filename" || echo "No changes to commit"
+    - name: Push changes to app branch
+      run: |
+        git push origin ${{ env.APP_BRANCH }}
     - name: Post job cleanup
       run: |
         git config --global --unset-all safe.directory
