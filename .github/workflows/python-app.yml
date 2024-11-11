@@ -35,11 +35,27 @@ jobs:
       run: |
         nuitka ${{ env.Nuitka_OPTIONS }}
     - name: 重命名
+      shell: pwsh
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
         $newFileName = "$timestamp_FAID.exe"
         $originalFilePath = "app.exe"
         $newFilePath = Join-Path (Split-Path $originalFilePath) $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
-        Write-Output "File has been renamed to: $newFilePath"
-    
+        Write-Output "File has been renamed to: $newFileName"
+    - name: 创建 apps 目录
+      run: |
+        mkdir -p apps
+    - name: 移动文件到 apps 目录
+      run: |
+        mv $newFilePath apps/
+    - name: 提交并推送更改
+      env:
+        ACTION_TOKEN: ${{ secrets.ACTION_TOKEN }}
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git checkout main || git checkout -b main
+        git add apps/$newFileName
+        git commit -m "Add new build: $newFileName" || echo "No changes to commit"
+        git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
