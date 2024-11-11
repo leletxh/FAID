@@ -5,19 +5,19 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 permissions:
-  contents: write  # Required write permission to create and update branches
+  contents: write
 
 jobs:
   build_and_deploy:
 
-    runs-on: windows-latest  # Use the latest Windows runtime environment
+    runs-on: windows-latest
 
     env:
       Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=3"
-      APP_BRANCH: "app"  # Branch to store the compiled app
+      APP_BRANCH: "app"
 
     steps:
     - name: Checkout code
@@ -26,51 +26,20 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-    - name: Install dependencies
+    - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install nuitka
-    - name: Verify Nuitka installation
-      run: |
-        where nuitka
-        nuitka --version
-    - name: Build EXE with Nuitka
+    - name: 构建
       run: |
         nuitka ${{ env.Nuitka_OPTIONS }}
-    - name: Check if app.exe exists
-      run: |
-        if (-Not (Test-Path -Path ".\app.exe")) {
-          throw "app.exe was not generated successfully."
-        }
-    - name: Generate filename with timestamp
-      id: generate_filename
+    - name: 重命名
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $filename = "$timestamp_FAID.exe"
-        echo "::set-output name=filename::$filename"
-    - name: Rename app.exe
-      run: |
-        $filename = ${{ steps.generate_filename.outputs.filename }}
-        Rename-Item -Path .\app.exe -NewName $filename
-    - name: Checkout app branch
-      run: |
-        git checkout -b ${{ env.APP_BRANCH }} || git checkout ${{ env.APP_BRANCH }}
-        git pull origin ${{ env.APP_BRANCH }}
-    - name: Add and commit renamed file
-      run: |
-        $filename = ${{ steps.generate_filename.outputs.filename }}
-        git add "$filename"
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git commit -m "Add compiled app: $filename" || echo "No changes to commit"
-    - name: Push changes to app branch
-      run: |
-        git push origin ${{ env.APP_BRANCH }}
-    - name: Post job cleanup
-      run: |
-        git config --global --unset-all safe.directory
-        git config --local --unset-all core.sshCommand
-        git config --local --unset-all http.https://github.com/.extraheader
-        git submodule foreach --recursive "git config --local --unset-all core.sshCommand"
-        git submodule foreach --recursive "git config --local --unset-all http.https://github.com/.extraheader"
+        $newFileName = "$timestamp_FAID.exe"
+        $originalFilePath = "app.exe"
+        $newFilePath = Join-Path (Split-Path $originalFilePath) $newFileName
+        Move-Item -Path $originalFilePath -Destination $newFilePath
+        Write-Output "File has been renamed to: $newFilePath"
+    
