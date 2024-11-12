@@ -24,7 +24,7 @@ jobs:
     - name: Create Backup Directory
       id: create_backup_dir
       run: |
-        BACKUP_DIR="/old/$(date +'%Y-%m-%d_%H:%M:%S')"
+        BACKUP_DIR="./old/$(date +'%Y-%m-%d_%H:%M:%S')"
         mkdir -p $BACKUP_DIR
         echo "::set-output name=backup_dir::$BACKUP_DIR"
 
@@ -36,9 +36,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
       run: |
-        cd /old
-        git init
-        git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+        cd ./old
         git add .
         git commit -m "Backup before commit at $(date +'%Y-%m-%d %H:%M:%S')"
-        git push origin main --force
+        git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} main --force
