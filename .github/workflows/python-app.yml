@@ -37,8 +37,8 @@ jobs:
       shell: pwsh
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $newFileName = "$timestamp_FAID.exe"
-        $originalFilePath = "app.exe"
+        $newFileName = "$timestamp_FAID.py"
+        $originalFilePath = "app.py"
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
