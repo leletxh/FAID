@@ -42,6 +42,13 @@ jobs:
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         $newFilePathInApps = Join-Path -Path "apps" -ChildPath $newFileName
         
+        # 输出调试信息，确保变量正确生成
+        Write-Output "Timestamp: $timestamp"
+        Write-Output "New file name: $newFileName"
+        Write-Output "Original file path: $originalFilePath"
+        Write-Output "New file path: $newFilePath"
+        Write-Output "New file path in apps: $newFilePathInApps"
+        
         # 确保源文件存在
         if (Test-Path -Path $originalFilePath) {
             # 重命名文件
@@ -64,6 +71,7 @@ jobs:
             Write-Output "Source file $originalFilePath does not exist."
         }
         
+        # 配置 Git 并提交更改
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
