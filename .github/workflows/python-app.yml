@@ -33,24 +33,28 @@ jobs:
       run: |
         ping 127.0.0.1
     - name: 重命名并移动文件
+      id: rename-and-move
       shell: pwsh
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $newFileName = "$timestamp_FAID.py"
-        $originalFilePath = "app.py"
+        $newFileName = "$timestamp_FAID.exe"
+        $originalFilePath = "app.exe"
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
-        mkdir -p apps
+        if (-Not (Test-Path -Path "apps")) {
+            mkdir apps
+        }
         Move-Item -Path $newFilePath -Destination "apps/$newFileName"
         Write-Output "File has been moved to: apps/$newFileName"
+        echo "::set-output name=newFileName::$newFileName"
     - name: 提交并推送更改
       shell: pwsh
       env:
         ACTION_TOKEN: ${{ secrets.ACTION_TOKEN }}
         NEW_FILE_NAME: ${{ steps.rename-and-move.outputs.newFileName }}
       run: |
-        $newFileName = "${{ steps.rename-and-move.outputs.newFileName }}"
+        $newFileName = "${{ env.NEW_FILE_NAME }}"
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
