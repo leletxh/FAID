@@ -37,8 +37,8 @@ jobs:
       shell: pwsh
       run: |
         # 获取当前日期和时间
-        $timestamp = $(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
-        $newFileName = "$timestamp_FAID.py"
+        $timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
+        $newFileName = "${timestamp}_FAID.py"
         $originalFilePath = "app.py"
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         $newFilePathInApps = Join-Path -Path "apps" -ChildPath $newFileName
@@ -92,3 +92,7 @@ jobs:
         } else {
             Write-Output "No changes to commit."
         }
+                    git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
+                } else {
+                    Write-Output "No changes to commit."
+                }
