@@ -32,7 +32,7 @@ jobs:
     - name: 构建
       run: |
         ping 127.0.0.1
-    - name: 重命名并移动文件
+    - name: 发布
       id: rename-and-move
       shell: pwsh
       run: |
@@ -42,8 +42,13 @@ jobs:
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
-        Remove-Item -Path "apps/$newFileName" -Force
-        Write-Output "File has been moved to: apps/$newFileName"
+        
+        # 如果需要将文件移动到 apps/ 目录下：
+        $newFilePathInApps = Join-Path -Path "apps" -ChildPath $newFileName
+        Move-Item -Path $newFilePath -Destination $newFilePathInApps
+        Write-Output "File has been moved to: $newFilePathInApps"
+        
+        # 设置输出变量，假设这是在GitHub Actions中使用
         echo "::set-output name=newFileName::$newFileName"
         
         git config --global user.name 'github-actions'
