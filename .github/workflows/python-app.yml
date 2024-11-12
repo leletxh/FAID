@@ -36,7 +36,8 @@ jobs:
       id: rename-and-move
       shell: pwsh
       run: |
-        $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+        # 获取当前日期和时间
+        $timestamp = $(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
         $newFileName = "$timestamp_FAID.py"
         $originalFilePath = "app.py"
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
@@ -81,6 +82,13 @@ jobs:
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
-        git add apps/$newFileName
-        git commit -m "Add new build: $newFileName" || echo "No changes to commit"
-        git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
+        
+        # 检查是否有未提交的更改
+        $gitStatus = git status --porcelain
+        if ($gitStatus -ne "") {
+            git add apps/$newFileName
+            git commit -m "Add new build: $newFileName"
+            git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
+        } else {
+            Write-Output "No changes to commit."
+        }
