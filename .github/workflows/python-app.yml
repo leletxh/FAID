@@ -68,7 +68,3 @@ jobs:
         git add apps/$newFileName
         git commit -m "Add new build: $newFileName"
         git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
-                    git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
-                } else {
-                    Write-Output "No changes to commit."
-                }
