@@ -42,27 +42,10 @@ jobs:
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
-        
-        # Ensure the 'apps' directory exists
-        if (-Not (Test-Path -Path "apps")) {
-            mkdir apps
-            Move-Item -Path $newFilePath -Destination "apps/$newFileName"
-        }
-
-        # Check if the destination file already exists and delete it
-        if (Test-Path -Path "apps/$newFileName") {
-            Remove-Item -Path "apps/$newFileName" -Force
-        }
-
+        Remove-Item -Path "apps/$newFileName" -Force
         Write-Output "File has been moved to: apps/$newFileName"
         echo "::set-output name=newFileName::$newFileName"
-    - name: 提交并推送更改
-      shell: pwsh
-      env:
-        ACTION_TOKEN: ${{ secrets.ACTION_TOKEN }}
-        NEW_FILE_NAME: ${{ steps.rename-and-move.outputs.newFileName }}
-      run: |
-        $newFileName = "${{ env.NEW_FILE_NAME }}"
+        
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
