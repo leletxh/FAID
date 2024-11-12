@@ -1,0 +1,44 @@
+name: Auto Backup Code Before Commit
+
+on:
+  push:
+    branches:
+      - main # 监听main分支的推送事件
+  pull_request:
+    branches:
+      - main # 监听main分支的拉取请求事件
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Git
+      run: |
+        git config --global user.name 'Backup Bot'
+        git config --global user.email 'backupbot@example.com'
+
+    - name: Create Backup Directory
+      id: create_backup_dir
+      run: |
+        BACKUP_DIR="/old/$(date +'%Y-%m-%d_%H:%M:%S')"
+        mkdir -p $BACKUP_DIR
+        echo "::set-output name=backup_dir::$BACKUP_DIR"
+
+    - name: Copy Files to Backup Directory
+      run: |
+        cp -r . ${{ steps.create_backup_dir.outputs.backup_dir }}
+
+    - name: Commit and Push Backup
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+      run: |
+        cd /old
+        git init
+        git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+        git add .
+        git commit -m "Backup before commit at $(date +'%Y-%m-%d %H:%M:%S')"
+        git push origin main --force
