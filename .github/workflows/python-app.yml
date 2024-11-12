@@ -32,7 +32,7 @@ jobs:
     - name: 构建
       run: |
         ping 127.0.0.1
-    - name: 重命名
+    - name: 重命名并移动文件
       shell: pwsh
       run: |
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -41,12 +41,9 @@ jobs:
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
-    - name: 创建 apps 目录
-      run: |
         mkdir -p apps
-    - name: 移动文件到 apps 目录
-      run: |
-        mv $newFilePath apps/
+        Move-Item -Path $newFilePath -Destination "apps/$newFileName"
+        Write-Output "File has been moved to: apps/$newFileName"
     - name: 提交并推送更改
       env:
         ACTION_TOKEN: ${{ secrets.ACTION_TOKEN }}
