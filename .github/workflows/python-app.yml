@@ -20,15 +20,15 @@ jobs:
       APP_BRANCH: "app"
 
     steps:
-    - name: Checkout code
+    - name: 创建python3.10
       uses: actions/checkout@v4
-    - name: Set up Python 3.10
+    - name: 启动环境
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
     - name: 安装依赖
       run: |
-        python -m pip install --upgrade pip
+        ping 127.0.0.1
     - name: 构建
       run: |
         ping 127.0.0.1
@@ -42,10 +42,18 @@ jobs:
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         Move-Item -Path $originalFilePath -Destination $newFilePath
         Write-Output "File has been renamed to: $newFilePath"
+        
+        # Ensure the 'apps' directory exists
         if (-Not (Test-Path -Path "apps")) {
             mkdir apps
+            Move-Item -Path $newFilePath -Destination "apps/$newFileName"
         }
-        Move-Item -Path $newFilePath -Destination "apps/$newFileName"
+
+        # Check if the destination file already exists and delete it
+        if (Test-Path -Path "apps/$newFileName") {
+            Remove-Item -Path "apps/$newFileName" -Force
+        }
+
         Write-Output "File has been moved to: apps/$newFileName"
         echo "::set-output name=newFileName::$newFileName"
     - name: 提交并推送更改
