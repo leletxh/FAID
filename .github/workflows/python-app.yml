@@ -36,62 +36,40 @@ jobs:
       id: rename-and-move
       shell: pwsh
       run: |
-        # 获取当前日期和时间
         $timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
         $newFileName = "${timestamp}_FAID.py"
         $originalFilePath = "app.py"
         $newFilePath = Join-Path -Path "." -ChildPath $newFileName
         $newFilePathInApps = Join-Path -Path "apps" -ChildPath $newFileName
-        
-        # 输出调试信息，确保变量正确生成
         Write-Output "Timestamp: $timestamp"
         Write-Output "New file name: $newFileName"
         Write-Output "Original file path: $originalFilePath"
         Write-Output "New file path: $newFilePath"
         Write-Output "New file path in apps: $newFilePathInApps"
-        
-        # 确保源文件存在
         if (Test-Path -Path $originalFilePath) {
-            # 重命名文件
             Move-Item -Path $originalFilePath -Destination $newFilePath
             Write-Output "File has been renamed to: $newFilePath"
-        
-            # 确保目标目录存在，如果不存在则创建
             if (-Not (Test-Path -Path "apps")) {
                 New-Item -ItemType Directory -Path "apps"
                 Write-Output "Directory 'apps' has been created."
             }
-        
-            # 检查目标文件是否已存在，如果存在则删除
             if (Test-Path -Path $newFilePathInApps) {
                 Remove-Item -Path $newFilePathInApps -Force
                 Write-Output "Existing file $newFilePathInApps has been removed."
             }
         
-            # 将文件移动到 apps/ 目录
             Move-Item -Path $newFilePath -Destination $newFilePathInApps
             Write-Output "File has been moved to: $newFilePathInApps"
-        
-            # 设置输出变量，假设这是在GitHub Actions中使用
             echo "::set-output name=newFileName::$newFileName"
         } else {
             Write-Output "Source file $originalFilePath does not exist."
         }
-        
-        # 配置 Git 并提交更改
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
-        
-        # 检查是否有未提交的更改
-        $gitStatus = git status --porcelain
-        if ($gitStatus -ne "") {
-            git add apps/$newFileName
-            git commit -m "Add new build: $newFileName"
-            git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
-        } else {
-            Write-Output "No changes to commit."
-        }
+        git add apps/$newFileName
+        git commit -m "Add new build: $newFileName"
+        git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
                     git push https://$ACTION_TOKEN@github.com/${{ github.repository }}.git main
                 } else {
                     Write-Output "No changes to commit."
