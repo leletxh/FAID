@@ -38,6 +38,7 @@ jobs:
       id: rename-and-move
       shell: pwsh
       run: |
+        git pull origin main
         $timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
         $newFileName = "${timestamp}_FAID.py"
         $originalFilePath = "app.py"
