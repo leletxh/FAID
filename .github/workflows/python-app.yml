@@ -61,8 +61,6 @@ jobs:
             Move-Item -Path $newFilePath -Destination $newFilePathInApps
             Write-Output "File has been moved to: $newFilePathInApps"
             echo "::set-output name=newFileName::$newFileName"
-        } else {
-            Write-Output "Source file $originalFilePath does not exist."
         }
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
