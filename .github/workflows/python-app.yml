@@ -45,9 +45,12 @@ jobs:
         Move-Item -Path $newFilePath -Destination "apps/$newFileName"
         Write-Output "File has been moved to: apps/$newFileName"
     - name: 提交并推送更改
+      shell: pwsh
       env:
         ACTION_TOKEN: ${{ secrets.ACTION_TOKEN }}
+        NEW_FILE_NAME: ${{ steps.rename-and-move.outputs.newFileName }}
       run: |
+        $newFileName = "${{ steps.rename-and-move.outputs.newFileName }}"
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git checkout main || git checkout -b main
