@@ -1,6 +1,7 @@
 import json
 import requests
 import Debug
+import base64
 class ollama():
     def __init__(self,ip:str = "localhost",port:str = "11434"):
         self.debug = Debug.Debug(fname="api.log")
@@ -59,6 +60,19 @@ class ollama():
             return True
         else:
             return False
+    def generate(self,model_name:str,prompt:str):
+        url = f"{self.url}/api/generate"
+        post = {"model":model_name,"prompt":prompt,"stream":True}
+        data = requests.post(url=url,json=post,stream=True)
+        temp = ""
+        for i in data.iter_lines():
+            j = json.loads(i)
+            if "error" in j:
+                yield j["error"]
+                break
+            self.debug.info(j)
+            temp += j["response"]
+            yield temp
     def chat(self,model_name:str,message:str,historical_dialogs):
         messages = []
         for i in historical_dialogs:
@@ -80,16 +94,31 @@ class ollama():
                 break
             if not(j["done"]):
                 yield j["message"]["content"]
-    def generate(self,model_name:str,prompt:str):
-        url = f"{self.url}/api/generate"
-        post = {"model":model_name,"prompt":prompt,"stream":True}
+    def chat_img(self,model_name:str,message:str,historical_dialogs,imgpath):
+        decoded_data = []
+        for i in imgpath:
+            self.debug.info("img path " + i)
+            with open(i, 'rb') as encoded_file:
+                encoded_data = encoded_file.read()
+            decoded_data.append(base64.standard_b64encode(encoded_data))
+        messages = []
+        for i in historical_dialogs:
+            temp = {"role": "user","content": i[0]}
+            messages.append(temp)
+            temp = {"role": "assistant","content": i[1]}
+            messages.append(temp)
+        temp = {"role": "user","content": message,"images":decoded_data}
+        messages.append(temp)
+        url = f"{self.url}/api/chat"
+        post = {"model":model_name,"messages":messages,"stream":True}
+        self.debug.info(post)
         data = requests.post(url=url,json=post,stream=True)
-        temp = ""
         for i in data.iter_lines():
             j = json.loads(i)
+            self.debug.info(i)
             if "error" in j:
                 yield j["error"]
                 break
-            self.debug.info(j)
-            temp += j["response"]
-            yield temp
+            if not(j["done"]):
+                yield j["message"]["content"]
+    
