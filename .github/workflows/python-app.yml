@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests,base64 --plugin-enable= gradio,json,requests,base64 --windows-uac-admin --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=16"
+      Nuitka_OPTIONS: "--onefile --standalone --include-module=gradio,json,requests,base64 --plugin-enable= gradio,json,requests --windows-uac-admin --include-package=PIL.ImageQt --output-filename=app.exe app.py --assume-yes-for-downloads --show-progress --jobs=16"
       APP_BRANCH: "app"
 
     steps:
